@@ -17,3 +17,11 @@ class BasicModule(t.nn.Module):
             name = time.strftime(prefix + "%m%d_%H%M%S.pth")
         t.save(self.state_dict(), name)
         return name
+
+
+class Flattern(t.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x: t.Tensor):
+        return x.view(x.size(0), -1)
