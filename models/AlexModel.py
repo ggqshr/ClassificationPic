@@ -1,26 +1,27 @@
-from torchvision.models import alexnet
+from torchvision.models import alexnet,vgg16
 from .basic_module import BasicModule, Flattern
 from torch import nn
 from torch.optim import Adam
 import warnings
+import torch as t
 
 
 class AlexModel(BasicModule):
     def __init__(self, feature_d=256):
         super().__init__()
         self.model_name = "alexnet"
-        self.model = alexnet(pretrained=True)
+        self.model = vgg16(pretrained=True)
         self.extract = nn.Sequential(  # fune-tuning
             Flattern(),
-            nn.Dropout(),
-            nn.Linear(256 * 6 * 6, 4096),
-            nn.ReLU(inplace=True),
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
             nn.Dropout(),
             nn.Linear(4096, 4096),
-            nn.ReLU(inplace=True),
-            nn.Linear(4096, feature_d)
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, feature_d),
         )
-        self.model.classifier = nn.Linear(256, 2)
+        self.model.classifier = nn.Linear(feature_d, 128)
 
     def forward(self, *inx):
         if len(inx) == 1:
@@ -31,3 +32,9 @@ class AlexModel(BasicModule):
         img1_feature = self.extract(img1_feature)
         img2_feature = self.extract(img2_feature)
 
+        temp = ((img1_feature - img2_feature) ** 2) / (img1_feature + img2_feature)
+
+        final_feature: t.Tensor = self.model.classifier(temp)
+        softmax = nn.LogSoftmax(dim=1)
+
+        return softmax(final_feature)
