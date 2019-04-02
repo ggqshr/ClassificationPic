@@ -2,23 +2,22 @@ import warnings
 
 
 class ConfigObj(object):
-    def __init__(self):
-        env = 'tt'
-        vis_port = 8097
+    env = 'tt'
+    vis_port = 8097
 
-        train_data_path = "./data/totrain"
-        test_data_path = "./data/totest"
-        load_model_path = None
+    train_data_path = "./data/totrain"
+    test_data_path = "./data/totest"
+    load_model_path = None
 
-        batch_size = 32
-        use_gpu = True
-        num_worker = 4
-        print_freq = 20
+    batch_size = 32
+    use_gpu = True
+    num_worker = 4
+    print_freq = 20
 
-        max_epoch = 10
-        lr = 1e-3
-        weight_decay = 0e-5
-        lr_decay = 0.5
+    max_epoch = 10
+    lr = 1e-3
+    weight_decay = 0e-5
+    lr_decay = 0.5
 
     def _update_para(self, kwargs) -> None:
         for k, v in kwargs:

@@ -12,6 +12,9 @@ normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
 
 class PairDataSet(data.Dataset):
     def __init__(self, path2img):
+        """
+        :param path2img: 图片数据的位置
+        """
         transform = T.Compose([
             T.Resize((224, 224)),
             T.RandomHorizontalFlip(),  # 随机翻转
