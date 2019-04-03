@@ -1,4 +1,4 @@
-from torchvision.models import alexnet, vgg16
+from torchvision.models import alexnet, vgg16, squeezenet1_1
 from .basic_module import BasicModule, Flattern
 from torch import nn
 import warnings
@@ -6,19 +6,15 @@ import torch as t
 
 
 class AlexModel(BasicModule):
-    def __init__(self, feature_d=256):
+    def __init__(self, feature_d=128):
         super().__init__()
-        self.model_name = "alexnet"
-        self.model = vgg16(pretrained=True)
+        self.model_name = "squeezenet"
+        self.model = squeezenet1_1(pretrained=True)
         self.extract = nn.Sequential(  # fune-tuning
-            Flattern(),
-            nn.Linear(512 * 7 * 7, 4096),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(4096, 4096),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(4096, feature_d),
+            nn.Dropout(p=0.5),
+            nn.Conv2d(512, feature_d, 1),
+            nn.ReLU(inplace=True),
+            nn.AvgPool2d(13, stride=1)
         )
         self.model.classifier = nn.Linear(feature_d, 128)
 
@@ -33,8 +29,6 @@ class AlexModel(BasicModule):
 
         temp = ((img1_feature - img2_feature) ** 2) / (img1_feature + img2_feature)
 
-        final_feature: t.Tensor = self.model.classifier(temp)
+        final_feature: t.Tensor = self.model.classifier(temp.view(temp.shape[0], -1))
 
         return final_feature.sum(dim=1)
-
-
