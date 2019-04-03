@@ -1,7 +1,6 @@
-from torchvision.models import alexnet,vgg16
+from torchvision.models import alexnet, vgg16
 from .basic_module import BasicModule, Flattern
 from torch import nn
-from torch.optim import Adam
 import warnings
 import torch as t
 
@@ -23,11 +22,11 @@ class AlexModel(BasicModule):
         )
         self.model.classifier = nn.Linear(feature_d, 128)
 
-    def forward(self, *inx):
-        if len(inx) == 1:
-            warnings.warn("the input size not correct!!")
-        img1_feature = self.model.features(inx[0])  # feature of img1
-        img2_feature = self.model.features(inx[1])  # feature of img2
+    def forward(self, x: t.Tensor):
+        img1 = x[[i for i in range(x.shape[0])], 0]
+        img2 = x[[i for i in range(x.shape[0])], 1]
+        img1_feature = self.model.features(img1)  # feature of img1
+        img2_feature = self.model.features(img2)  # feature of img2
 
         img1_feature = self.extract(img1_feature)
         img2_feature = self.extract(img2_feature)
@@ -35,6 +34,7 @@ class AlexModel(BasicModule):
         temp = ((img1_feature - img2_feature) ** 2) / (img1_feature + img2_feature)
 
         final_feature: t.Tensor = self.model.classifier(temp)
-        softmax = nn.LogSoftmax(dim=1)
 
-        return softmax(final_feature)
+        return final_feature.sum(dim=1)
+
+

@@ -1,9 +1,10 @@
 import time
 
 import torch as t
+from torch import nn
 
 
-class BasicModule(t.nn.Module):
+class BasicModule(nn.Module):
     def __int__(self):
         super().__init__()
         self.model_name = str(type(self))

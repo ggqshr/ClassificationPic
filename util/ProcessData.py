@@ -1,5 +1,5 @@
 import torchvision.transforms as T
-import torch as t
+import torch
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from torch.utils import data
@@ -28,11 +28,11 @@ class PairDataSet(data.Dataset):
         sample_index = 0
         for anchor_data, anchor_label in self.dataset:
             positive = self.generate_positive_class_pic(sample_index)
-            self.final_data_set.append(((anchor_data, transform(positive)), 1))
+            self.final_data_set.append((torch.stack((anchor_data, transform(positive))), 1))
 
             this_classes = inx2class.get(anchor_label)
             nagetive = self.generate_nagetive_class_pic(path2img, this_classes)
-            self.final_data_set.append(((anchor_data, transform(nagetive)), 0))
+            self.final_data_set.append((torch.stack((anchor_data, transform(nagetive))), 0))
             sample_index += 1
 
     def generate_nagetive_class_pic(self, path2img, this_classes):
