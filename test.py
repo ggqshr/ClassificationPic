@@ -2,7 +2,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils import data
 import torch as t
 from util import PairDataSet, Visualizer
-from allModels import AlexModel
+from allModels import AlexModel, ClassifyModel
 
 
 def test1():
@@ -17,8 +17,9 @@ def test1():
 
 
 model = AlexModel()
+model1 = ClassifyModel("./checkpoints/squeezenet_0404_101553.pth")
 for para in model.model.features.parameters():
-    para.requires_grad=False
+    para.requires_grad = False
 print(model)
 for para in model.model.named_parameters():
     print(para)

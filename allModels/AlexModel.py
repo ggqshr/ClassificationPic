@@ -16,19 +16,25 @@ class AlexModel(BasicModule):
             nn.ReLU(inplace=True),
             nn.AvgPool2d(13, stride=1)
         )
-        self.model.classifier = nn.Linear(feature_d, 128)
+        # self.model.classifier = nn.Linear(feature_d, 128)
 
     def forward(self, x: t.Tensor):
-        img1 = x[[i for i in range(x.shape[0])], 0]
-        img2 = x[[i for i in range(x.shape[0])], 1]
-        img1_feature = self.model.features(img1)  # feature of img1
-        img2_feature = self.model.features(img2)  # feature of img2
+        if len(x.shape) == 5:
+            img1 = x[[i for i in range(x.shape[0])], 0]
+            img2 = x[[i for i in range(x.shape[0])], 1]
+            img1_feature = self.model.features(img1)  # feature of img1
+            img2_feature = self.model.features(img2)  # feature of img2
 
-        img1_feature = self.extract(img1_feature)
-        img2_feature = self.extract(img2_feature)
+            img1_feature = self.extract(img1_feature)
+            img2_feature = self.extract(img2_feature)
 
-        temp = ((img1_feature - img2_feature) ** 2) / (img1_feature + img2_feature)
+            temp = (img1_feature - img2_feature) ** 2
+            # ((img1_feature - img2_feature) ** 2) / (img1_feature + img2_feature)
 
-        final_feature: t.Tensor = self.model.classifier(temp.view(temp.shape[0], -1))
+            # final_feature: t.Tensor = self.model.classifier(temp.view(temp.shape[0], -1))
 
-        return final_feature.sum(dim=1)
+            return temp.view(temp.shape[0], -1).sum(dim=1) ** 1. / 2
+        elif len(x.shape) == 4:
+            x = self.model.features(x)
+            x = self.extract(x)
+            return x.view(x.shape[0], -1)

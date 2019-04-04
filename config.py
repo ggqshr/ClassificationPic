@@ -9,7 +9,7 @@ class ConfigObj(object):
     test_data_path = "./data/totest"
     load_model_path = None
 
-    batch_size = 32
+    batch_size = 16
     use_gpu = True
     num_worker = 4
     print_freq = 20
@@ -20,7 +20,7 @@ class ConfigObj(object):
     lr_decay = 0.5
 
     def _update_para(self, kwargs) -> None:
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             if not hasattr(self, k):
                 warnings.warn("Warning: opt has not attribut %s" % k)
             setattr(self, k, v)
