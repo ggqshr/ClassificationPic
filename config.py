@@ -8,6 +8,7 @@ class ConfigObj(object):
     train_data_path = "./data/totrain"
     test_data_path = "./data/totest"
     load_model_path = None
+    class_data_path = "./classdata"
 
     batch_size = 8
     use_gpu = True

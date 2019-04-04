@@ -5,7 +5,7 @@ from .AlexModel import AlexModel
 
 
 class ClassifyModel(BasicModule):
-    def __init__(self, path):
+    def __init__(self, path="./checkpoints/squeezenet_0404_101553.pth"):
         super().__init__()
         self.model_name = "ClassifyModel"
         self.feature = AlexModel()
@@ -26,5 +26,3 @@ class ClassifyModel(BasicModule):
         final_feature: t.Tensor = self.classify(temp.view(temp.shape[0], -1))
 
         return final_feature.view(final_feature.shape[0])
-
-

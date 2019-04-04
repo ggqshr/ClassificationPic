@@ -1,12 +1,15 @@
 import torch as t
+import torchvision.transforms as T
 from util import PairDataSet, Visualizer
 from allModels import AlexModel, BasicModule, ClassifyModel
 from config import obj
 from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
 from torch import nn
 from torch import optim
 from torchnet import meter
 import tqdm
+from PIL import Image
 
 
 def contrastiveLoss(y, D, m=0.4):
@@ -136,7 +139,7 @@ def trainClassify(**kwargs):
         vis.plot("val_accuracy", val_accuracy)
         vis.log("epoch:{epoch},lr:{lr},loss:{loss},train_cm:{train_cm},val_cm:{val_cm}".format(
             epoch=epoch, loss=loss_meter.value()[0], val_cm=str(val_cm.value()), train_cm=str(confusion_matrix.value()),
-                lr=lr))
+            lr=lr))
 
         # if loss_meter.value()[0] > previous_loss:
         #     lr = lr * obj.lr_decay
@@ -216,6 +219,40 @@ def test(**kwargs):
     for d, l in train_data_loader:
         dis = model(d.cuda())
         print("the label is {label} the dis is {dis}".format(label=l, dis=dis))
+
+
+def classify_img(test_img_path, **kwargs):
+    """
+    使用需要传入一个模型的加载地址
+    :param kwargs:
+    :return:
+    """
+    vis = Visualizer(obj.env, port=obj.vis_port)
+    transform = T.Compose([
+        T.Resize((224, 224)),
+        T.ToTensor()
+    ])
+
+    obj._update_para(kwargs)
+    model = ClassifyModel()
+    model.load(obj.load_model_path)
+    model.eval()
+
+    class_data = ImageFolder(obj.class_data_path, transform=transform)
+    inx2class = {v: k for k, v in class_data.class_to_idx.items()}
+    class_img_data, class_img_label = DataLoader(class_data, batch_size=len(class_data.classes)).__iter__().next()
+
+    test_img_data = transform(Image.open(test_img_path))
+
+    expand_test_img_data = test_img_data.expand_as(class_img_data)
+
+    target = model(t.stack((expand_test_img_data, class_img_data), dim=1))
+
+    classes_hat = target.argmax()
+
+    vis.img(inx2class.get(classes_hat.item()), test_img_data)
+
+    print(classes_hat)
 
 
 if __name__ == '__main__':

@@ -114,3 +114,5 @@ out
 gen
 /data/
 /checkpoints/
+/classdata/
+/valid_pic/
