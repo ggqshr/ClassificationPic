@@ -9,14 +9,14 @@ class ConfigObj(object):
     test_data_path = "./data/totest"
     load_model_path = None
 
-    batch_size = 16
+    batch_size = 8
     use_gpu = True
     num_worker = 4
     print_freq = 20
 
     max_epoch = 10
     lr = 1e-3
-    weight_decay = 0e-5
+    weight_decay = 3e-5
     lr_decay = 0.5
 
     def _update_para(self, kwargs) -> None:

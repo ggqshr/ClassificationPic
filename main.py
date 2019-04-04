@@ -130,18 +130,25 @@ def trainClassify(**kwargs):
                 vis.plot("loss", loss_meter.value()[0])
                 # vis.log("loss:{loss}".format(loss=loss.item()))
 
-        model.save()
-
         val_cm, val_accuracy = valCLassify(model, val_dataloader)
+        model.save(val_accuracy)
 
         vis.plot("val_accuracy", val_accuracy)
         vis.log("epoch:{epoch},lr:{lr},loss:{loss},train_cm:{train_cm},val_cm:{val_cm}".format(
             epoch=epoch, loss=loss_meter.value()[0], val_cm=str(val_cm.value()), train_cm=str(confusion_matrix.value()),
-            lr=lr))
+                lr=lr))
 
-        if loss_meter.value()[0] > previous_loss:
-            lr = lr * obj.lr_decay
-            # 第二种降低学习率的方法:不会有moment等信息的丢失
+        # if loss_meter.value()[0] > previous_loss:
+        #     lr = lr * obj.lr_decay
+        #     # 第二种降低学习率的方法:不会有moment等信息的丢失
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = lr
+        if epoch == 2:
+            lr = 5e-4
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        if epoch == 6:
+            lr = 1e-5
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
@@ -178,7 +185,7 @@ def valCLassify(model, dataloader):
     :param dataloader:
     :return:
     """
-    sigmod  = nn.Sigmoid()
+    sigmod = nn.Sigmoid()
     device = t.device("cuda") if obj.use_gpu else t.device("cpu")
     model.eval()
     confusion_matrix = meter.ConfusionMeter(2)

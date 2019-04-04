@@ -12,10 +12,10 @@ class BasicModule(nn.Module):
     def load(self, path):
         self.load_state_dict(t.load(path))
 
-    def save(self, name=None):
+    def save(self, accuracy, name=None):
         if name is None:
             prefix = "checkpoints/" + self.model_name + "_"
-            name = time.strftime(prefix + "%m%d_%H%M%S.pth")
+            name = time.strftime(prefix + "$$$" + str(accuracy) + "$$$%m%d_%H%M%S.pth")
         t.save(self.state_dict(), name)
         return name
 
