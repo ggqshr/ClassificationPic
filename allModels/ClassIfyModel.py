@@ -5,7 +5,7 @@ from .AlexModel import AlexModel
 
 
 class ClassifyModel(BasicModule):
-    def __init__(self, path="./checkpoints/squeezenet_0404_101553.pth"):
+    def __init__(self, path="./checkpoints/squeezenet_###No###0407_095204.pth"):
         super().__init__()
         self.model_name = "ClassifyModel"
         self.feature = AlexModel()

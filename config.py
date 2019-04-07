@@ -5,8 +5,8 @@ class ConfigObj(object):
     env = 'tt'
     vis_port = 8097
 
-    train_data_path = "./data/totrain"
-    test_data_path = "./data/totest"
+    train_data_path = "./seedPic/totrain"
+    test_data_path = "./seedPic/totest"
     load_model_path = None
     class_data_path = "./classdata"
 
@@ -17,7 +17,7 @@ class ConfigObj(object):
 
     max_epoch = 10
     lr = 1e-3
-    weight_decay = 3e-5
+    weight_decay = 1e-4
     lr_decay = 0.5
 
     def _update_para(self, kwargs) -> None:

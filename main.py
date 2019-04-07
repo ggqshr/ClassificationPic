@@ -58,7 +58,7 @@ def trainExtractFeature(**kwargs):
             optimizer.zero_grad()
             y_hat = nn.parallel.data_parallel(model, input, [0, 1])
 
-            loss: t.Tensor = ceiterion(target, y_hat, m=0.6)
+            loss: t.Tensor = ceiterion(target, y_hat, m=0.7)
             loss.backward()
             optimizer.step()
             loss_meter.add(loss.item())
@@ -68,7 +68,7 @@ def trainExtractFeature(**kwargs):
                 vis.plot("loss", loss_meter.value()[0])
                 vis.log("loss:{loss}".format(loss=loss.item()))
 
-        model.save()
+        model.save("No")
 
         val_cm, val_accuracy = val(model, val_dataloader)
 
@@ -95,7 +95,7 @@ def trainClassify(**kwargs):
 
     device = t.device("cuda") if obj.use_gpu else t.device("cpu")
 
-    model = ClassifyModel(obj.load_model_path)
+    model = ClassifyModel()
     model.to(device)
 
     train_dataloader = DataLoader(train_data, obj.batch_size, shuffle=True, num_workers=obj.num_worker)
@@ -135,25 +135,25 @@ def trainClassify(**kwargs):
 
         val_cm, val_accuracy = valCLassify(model, val_dataloader)
         model.save(val_accuracy)
-
+        vis.plot("train_accuracy", 100 * (confusion_matrix.value().trace()) / (confusion_matrix.value().sum()))
         vis.plot("val_accuracy", val_accuracy)
         vis.log("epoch:{epoch},lr:{lr},loss:{loss},train_cm:{train_cm},val_cm:{val_cm}".format(
             epoch=epoch, loss=loss_meter.value()[0], val_cm=str(val_cm.value()), train_cm=str(confusion_matrix.value()),
             lr=lr))
 
-        # if loss_meter.value()[0] > previous_loss:
-        #     lr = lr * obj.lr_decay
-        #     # 第二种降低学习率的方法:不会有moment等信息的丢失
+        if loss_meter.value()[0] > previous_loss:
+            lr = lr * obj.lr_decay
+            # 第二种降低学习率的方法:不会有moment等信息的丢失
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        # if epoch == 2:
+        #     lr = 5e-4
         #     for param_group in optimizer.param_groups:
         #         param_group['lr'] = lr
-        if epoch == 2:
-            lr = 5e-4
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr
-        if epoch == 6:
-            lr = 1e-5
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr
+        # if epoch == 6:
+        #     lr = 1e-5
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = lr
 
         previous_loss = loss_meter.value()[0]
 
@@ -168,7 +168,7 @@ def val(model, dataloader):
     """
     device = t.device("cuda") if obj.use_gpu else t.device("cpu")
     model.eval()
-    confusion_matrix = meter.ConfusionMeter(1)
+    confusion_matrix = meter.ConfusionMeter(2)
     for ii, (val_input, label) in tqdm.tqdm(enumerate(dataloader)):
         val_input = val_input.to(device)
         y_hat = model(val_input)
@@ -227,12 +227,12 @@ def classify_img(test_img_path, **kwargs):
     :param kwargs:
     :return:
     """
-    vis = Visualizer(obj.env, port=obj.vis_port)
+    vis = Visualizer("classify", port=obj.vis_port)
     transform = T.Compose([
         T.Resize((224, 224)),
         T.ToTensor()
     ])
-
+    sigmod = nn.Sigmoid()
     obj._update_para(kwargs)
     model = ClassifyModel()
     model.load(obj.load_model_path)
@@ -248,11 +248,57 @@ def classify_img(test_img_path, **kwargs):
 
     target = model(t.stack((expand_test_img_data, class_img_data), dim=1))
 
-    classes_hat = target.argmax()
+    classes_hat = sigmod(target).argmax()
 
-    vis.img(inx2class.get(classes_hat.item()), test_img_data)
+    vis.img(inx2class.get(class_data.samples[classes_hat.item()][1]), test_img_data)
 
     print(classes_hat)
+
+
+def get_dis_between(img1, img2, **kwargs):
+    obj._update_para(kwargs)
+    model = AlexModel()
+    model.load(obj.load_model_path)
+    model.eval()
+    transform = T.Compose([
+        T.Resize((224, 224)),
+        T.ToTensor()
+    ])
+
+    img1_data = transform(Image.open(img1))
+    img2_data = transform(Image.open(img2))
+
+    dis = model(t.stack((img1_data, img2_data)).unsqueeze(0))
+
+    print("the dis between is {dis}".format(dis=dis))
+
+
+def get_calss_use_dis(img1, **kwargs):
+    obj._update_para(kwargs)
+    vis = Visualizer("classify", port=obj.vis_port)
+
+    model = AlexModel()
+    model.load(obj.load_model_path)
+    model.eval()
+    transform = T.Compose([
+        T.Resize((224, 224)),
+        T.ToTensor()
+    ])
+
+    class_data = ImageFolder(obj.class_data_path, transform=transform)
+    inx2class = {v: k for k, v in class_data.class_to_idx.items()}
+    class_img_data, class_img_label = DataLoader(class_data, batch_size=len(class_data.classes)).__iter__().next()
+
+    test_img_data = transform(Image.open(img1))
+
+    expand_test_img_data = test_img_data.expand_as(class_img_data)
+    dis = model(t.stack((expand_test_img_data, class_img_data), dim=1))
+
+    print("the dis between is {dis}".format(dis=dis))
+
+    class_hat = class_data.samples[dis.argmin().item()][1]
+    print("the class is {classes}".format(classes=inx2class.get(class_hat)))
+    vis.img(inx2class.get(class_hat), test_img_data)
 
 
 if __name__ == '__main__':

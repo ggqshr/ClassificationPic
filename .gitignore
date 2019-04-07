@@ -116,3 +116,5 @@ gen
 /checkpoints/
 /classdata/
 /valid_pic/
+/trainWithOutBehind/
+/seedPic/
