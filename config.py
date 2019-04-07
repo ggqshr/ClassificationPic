@@ -16,8 +16,8 @@ class ConfigObj(object):
     print_freq = 20
 
     max_epoch = 10
-    lr = 1e-3
-    weight_decay = 1e-4
+    lr = 5e-5
+    weight_decay = 3e-4
     lr_decay = 0.5
 
     def _update_para(self, kwargs) -> None:

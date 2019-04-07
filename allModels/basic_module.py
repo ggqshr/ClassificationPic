@@ -17,6 +17,7 @@ class BasicModule(nn.Module):
             prefix = "checkpoints/" + self.model_name + "_"
             name = time.strftime(prefix + "###" + str(accuracy) + "###%m%d_%H%M%S.pth")
         t.save(self.state_dict(), name)
+        print("current save file name is {name}".format(name=name))
         return name
 
 

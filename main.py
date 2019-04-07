@@ -58,7 +58,7 @@ def trainExtractFeature(**kwargs):
             optimizer.zero_grad()
             y_hat = nn.parallel.data_parallel(model, input, [0, 1])
 
-            loss: t.Tensor = ceiterion(target, y_hat, m=0.7)
+            loss: t.Tensor = ceiterion(target, y_hat, m=0.75)
             loss.backward()
             optimizer.step()
             loss_meter.add(loss.item())
@@ -82,7 +82,15 @@ def trainExtractFeature(**kwargs):
             # 第二种降低学习率的方法:不会有moment等信息的丢失
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
-
+        # if epoch == 3:
+        #     lr = 1e-4
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = lr
+        #
+        # if epoch == 6:
+        #     lr = 1e-5
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = lr
         previous_loss = loss_meter.value()[0]
 
 
@@ -96,6 +104,8 @@ def trainClassify(**kwargs):
     device = t.device("cuda") if obj.use_gpu else t.device("cpu")
 
     model = ClassifyModel()
+    if obj.load_model_path is not None:
+        model.load(obj.load_model_path)
     model.to(device)
 
     train_dataloader = DataLoader(train_data, obj.batch_size, shuffle=True, num_workers=obj.num_worker)
@@ -252,7 +262,8 @@ def classify_img(test_img_path, **kwargs):
 
     vis.img(inx2class.get(class_data.samples[classes_hat.item()][1]), test_img_data)
 
-    print(classes_hat)
+    print("the image name is {name},and the predict label is {label}".format(name=test_img_path, label=inx2class.get(
+        class_data.samples[classes_hat.item()][1])))
 
 
 def get_dis_between(img1, img2, **kwargs):
